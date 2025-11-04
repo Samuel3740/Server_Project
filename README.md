@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Server_Project1
 
 
