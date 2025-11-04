@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Server_Project1
 
 
@@ -71,3 +72,7 @@ docker ps
 
 # View logs (e.g., for container1)
 docker-compose logs -f [service_name_for_container_1]
+=======
+# Server_Project
+Multi-project development setup on Ubuntu Server 22.04 LTS using Docker and various backend tools.
+>>>>>>> ba844d090c9ad24a710507d17e23d01bd7a50f41
