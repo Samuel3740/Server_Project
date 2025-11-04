@@ -1,0 +1,155 @@
+services:
+
+  # PostgreSQL 데이터베이스 컨테이너
+  postgres:
+    image: postgres:15
+    container_name: postgres-container
+    environment:
+      POSTGRES_DB: samuel_postgresql_db
+      POSTGRES_USER: samuel
+      POSTGRES_PASSWORD: csj2641081k!postgresql
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+      PGUSER: samuel
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U samuel -d samuel_postgresql_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+
+  # # Neo4j 그래프 데이터베이스 컨테이너
+  # neo4j:
+  #  image: neo4j:5.15
+  #  container_name: neo4j-container
+    environment:
+      NEO4J_AUTH: neo4j/csj2641081k!neo4j
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+      NEO4J_dbms_memory_heap_initial__size: "512m"
+      NEO4J_dbms_memory_heap_max__size: "1G"
+    ports:
+      - "7474:7474"  # Neo4j Browser
+      - "7687:7687"  # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - app-network
+    restart: unless-stopped
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "csj2641081k!neo4j", "RETURN 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  # 컨테이너 1 - PostgreSQL 연결 애플리케이션
+  a1:
+    build:
+      context: ./a1
+      dockerfile: Dockerfile
+    container_name: a1-container
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://samuel:csj2641081k!postgresql@postgres:5432/samuel_postgresql_db
+      - PORT=3000
+      - APP_NAME=PostgreSQL App
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    volumes:
+      - ./a1:/app
+      - /app/node_modules
+
+
+  # 컨테이너 2 - 날씨 크롤러 애플리케이션
+  crawler_weather:
+    build:
+      context: ./crawler_weather
+      dockerfile: Dockerfile
+    container_name: crawler_weather-container
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=samuel_postgresql_db
+      - POSTGRES_USER=samuel
+      - POSTGRES_PASSWORD=csj2641081k!postgresql
+    volumes:
+      - ./crawler_weather:/app
+    command: ["tail", "-f", "/dev/null"]  # 현재는 main.py 미작성 상태이므로 대기
+    restart: unless-stopped
+    networks:
+      - app-network
+
+
+
+  # # 컨테이너 3 - Neo4j 연결 애플리케이션
+  # b1:
+  #   build:
+  #     context: ./b1
+  #     dockerfile: Dockerfile
+  #   container_name: b1-container
+  #   user: "${USER_ID:-1000}:${GROUP_ID:-1000}" 
+  #   ports:
+  #     - "3002:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEO4J_URI=bolt://neo4j:7687
+  #     - NEO4J_USER=neo4j
+  #     - NEO4J_PASSWORD=csj2641081k!neo4j
+  #     - PORT=3000
+  #     - APP_NAME=Neo4j App
+  #   depends_on:
+  #     neo4j:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./b1:/app
+  #     - /app/node_modules
+
+# 볼륨 설정 (데이터 영속성)
+volumes:
+  postgres_data:
+    driver: local
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+  neo4j_plugins:
+    driver: local
+
+# 네트워크 설정 (컨테이너 간 통신)
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
