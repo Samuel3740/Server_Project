@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:15
     container_name: postgres-container
-    network_mode: "host"
+  #  network_mode: "host"
     environment:
       POSTGRES_DB: samuel_postgresql_db
       POSTGRES_USER: samuel
