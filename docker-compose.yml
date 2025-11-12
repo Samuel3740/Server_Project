@@ -71,7 +71,7 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://samuel:csj2641081k!postgresql@postgres:5432/samuel_postgresql_db
+      - DATABASE_URL=postgresql://samuel:csj2641081k!postgresql@postgres:5432/a1_db
       - PORT=3000
       - APP_NAME=PostgreSQL App
     depends_on:
@@ -96,7 +96,7 @@ services:
         condition: service_healthy
     environment:
       - POSTGRES_HOST=postgres
-      - POSTGRES_DB=samuel_postgresql_db
+      - POSTGRES_DB=crawler_weather_db
       - POSTGRES_USER=samuel
       - POSTGRES_PASSWORD=csj2641081k!postgresql
     volumes:
