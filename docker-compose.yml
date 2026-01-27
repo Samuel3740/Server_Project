@@ -101,7 +101,9 @@ services:
       - POSTGRES_PASSWORD=csj2641081k!postgresql
     volumes:
       - ./crawler_weather:/app
-    command: ["tail", "-f", "/dev/null"]  # 현재는 main.py 미작성 상태이므로 대기
+    #    command: ["tail", "-f", "/dev/null"]  # 현재는 main.py 미작성 상태이므로 대기
+    # 컨테이너 시작 시 main.py를 실행하여 크롤링을 수행
+    command: ["python", "main.py"]
     restart: unless-stopped
     networks:
       - app-network

@@ -12,9 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 앱 소스는 로컬에서 바인드 마운트할 예정이므로 비워둠
-# COPY . .
+# 소스 코드는 docker-compose에서 바인드 마운트하므로 여기서는 복사하지 않습니다.
 
-# 임시: 컨테이너가 바로 종료되지 않도록 무한 대기 상태로 유지
-# 추후 main.py가 준비되면 CMD를 ["python","main.py"]로 변경
-CMD ["tail", "-f", "/dev/null"]
+# 컨테이너가 시작되면 main.py를 실행하여 한 번 크롤링 후 종료
+CMD ["python", "main.py"]

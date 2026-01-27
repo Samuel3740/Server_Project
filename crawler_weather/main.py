@@ -1,36 +1,42 @@
-# from crawler import crawl_weather
-# from db import get_connection
+from crawler import crawl_weather
+from db import get_connection
 
-# def main():
-#     conn = get_connection()
-#     cur = conn.cursor()
 
-#     # 테이블 생성
-#     with open("models.sql", "r", encoding="utf-8") as f:
-#         cur.execute(f.read())
-#         conn.commit()
+def main():
+    conn = get_connection()
+    cur = conn.cursor()
 
-#     data = crawl_weather()
+    # 테이블 생성 (없으면 생성, 있으면 유지)
+    with open("models.sql", "r", encoding="utf-8") as f:
+        cur.execute(f.read())
+        conn.commit()
 
-#     insert_sql = """
-#         INSERT INTO city_weather
-#         (city, temperature, humidity, observed_at)
-#         VALUES (%s, %s, %s, %s)
-#     """
+    data = crawl_weather()
 
-#     for d in data:
-#         cur.execute(insert_sql, (
-#             d["city"],
-#             d["temperature"],
-#             d["humidity"],
-#             d["observed_at"]
-#         ))
+    insert_sql = """
+        INSERT INTO city_weather
+        (city, temperature, humidity, observed_at)
+        VALUES (%s, %s, %s, %s)
+    """
 
-#     conn.commit()
-#     cur.close()
-#     conn.close()
+    for d in data:
+        cur.execute(
+            insert_sql,
+            (
+                d["city"],
+                d["temperature"],
+                d["humidity"],
+                d["observed_at"],
+            ),
+        )
 
-#     print(f"[OK] {len(data)} rows inserted into crawler_weather_db")
+    conn.commit()
+    cur.close()
+    conn.close()
 
-# if __name__ == "__main__":
-#     main()
+    print(f"[OK] {len(data)} rows inserted into crawler_weather_db.city_weather")
+
+
+if __name__ == "__main__":
+    main()
+
